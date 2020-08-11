@@ -409,7 +409,13 @@ def git_sync_filelist(evilgitfs_dir):
             f = csv.reader(csvfile, delimiter=' ', quotechar='|')
             for filepath, branchname, filesize in f:
                 partial, all_paths = split_path_all(filepath)
-                # do this way because helps in directory commands like ls
+
+                if getFromDict(dir_structure, all_paths) != int(filesize):
+                    # invalidate cache if file was modified and present in cache
+                    if partial in lru_file_cache:
+                        del lru_file_cache[partial]
+                        os.remove(os.path.join(evilgitfs_dir, 'datadir', partial))
+
                 nested_set(dir_structure, all_paths, int(filesize))
                 remote_file_size += int(filesize)
 
