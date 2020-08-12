@@ -1,6 +1,5 @@
 import os
 import sys
-import errno
 import csv
 import logging
 import shutil
@@ -13,7 +12,7 @@ from glob import glob
 from concurrent.futures import ThreadPoolExecutor
 import argparse
 from collections import OrderedDict
-from collections import namedtuple, defaultdict
+from collections import defaultdict
 from pathlib import Path
 from fuse import FUSE, FuseOSError, Operations
 from errno import ENOENT
@@ -295,7 +294,7 @@ def git_commit_to_remote(evilgitfs_dir, path_hash, full_path, filename, path):
     return True
 
 
-def git_retrieve_from_remote(evilgitfs_dir, path_hash, path_file):
+def git_retrieve_from_remote(evilgitfs_dir, path_hash, path_file, full_path):
     """
     Retrieve is safe for multiple threads to simultaneously use. But we will still use individual dirty directory so we can track
     and clean up filesize.
@@ -372,6 +371,7 @@ def post_git_ops(evilgitfs_dir):
 
 
 def git_sync_filelist(evilgitfs_dir):
+    global remote_file_size
     """
     Pull changes, merge and push changes for pure/filelist.txt
 
@@ -405,7 +405,7 @@ def git_sync_filelist(evilgitfs_dir):
         logging.debug(output)
 
         # update dir_structure
-        with open(os.path.join(pure_dir, 'filelist.txt'), 'r') as csvfile:
+        with open(os.path.join(puredir, 'filelist.txt'), 'r') as csvfile:
             f = csv.reader(csvfile, delimiter=' ', quotechar='|')
             for filepath, branchname, filesize in f:
                 partial, all_paths = split_path_all(filepath)
@@ -871,7 +871,8 @@ class Passthrough(Operations):
             git_retrieve_from_remote,
             self.evilgitfs_dir,
             path_hash,
-            path_file).result()
+            path_file,
+            full_path).result()
 
         # add to LRU!
         self._add_file_to_fs(path, create=False)
