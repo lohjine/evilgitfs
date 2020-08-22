@@ -13,8 +13,6 @@ pip3 install -r requirements.txt
 
 ## Usage
 
-resilient_code can be used on functions or code blocks.
-
 ```
 python3 evilgitfs -h
 
@@ -39,6 +37,8 @@ optional arguments:
   --git-directory GIT_DIRECTORY
                         directory for evilgitfs operations and cache storage (default='~/.evilgitfs')
 ```
+
+Evilgitfs requires your [git token](https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token). On startup, evilgitfs will attempt to read environment variable `evilgitfs_gittoken`. If not set, it will prompt you to enter it.
 
 ## Unavailable features
 
