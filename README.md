@@ -23,9 +23,9 @@ uses an LRU cache to make full use of the local disk storage, while allowing you
 All commands except read are done in background and non-blocking.
 
 positional arguments:
-  username              your git username
-  gitrepo               target git repository, has to exist
-  mountpoint            filepath for local mount point
+  username              your git username (e.g. lohjine)
+  gitrepo               remote git repository, has to exist (e.g. https://github.com/lohjine/evilgitfs)
+  mountpoint            filepath for local mount point (e.g. ~/gitmount)
 
 optional arguments:
   -h, --help            show this help message and exit
