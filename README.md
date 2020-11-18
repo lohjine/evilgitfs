@@ -14,6 +14,9 @@ pip3 install -r requirements.txt
 ## Usage
 
 ```
+Create an empty git repository on a remote git server, and run the following command:
+
+
 python3 evilgitfs -h
 
 usage: f.py [-h] [--cache-size CACHE_SIZE] [--sync-freq SYNC_FREQ] [--workers WORKERS] [--git-directory GIT_DIRECTORY] username gitrepo mountpoint
