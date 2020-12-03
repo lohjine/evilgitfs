@@ -24,10 +24,10 @@ logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 def getFromDict(dataDict, mapList):
     """
     Retrieves value from nested dict (dir_structure) using a list of keys
-    
+
     https://stackoverflow.com/questions/14692690/access-nested-dictionary-items-via-a-list-of-keys
     """
-    
+
     for k in mapList:
         dataDict = dataDict.get(k, None)
         if dataDict is None:
@@ -37,7 +37,7 @@ def getFromDict(dataDict, mapList):
 
 def deleteFromDict(dataDict, mapList, delete_empty_recursive=False):
     """
-    Deletes key from nested dict (dir_structure) using a list of keys, optionally deletes empty dicts as a result of deletion    
+    Deletes key from nested dict (dir_structure) using a list of keys, optionally deletes empty dicts as a result of deletion
     """
 
     _delfirst(dataDict, mapList)
@@ -80,10 +80,10 @@ def split_path_all(path):
     Splits a filepath into a list of directories so it can be used to interact with dir_structure using nested dict functions
     """
     # this is here because get burnt by this too much, fusepy's path always start with / but we don't want it
-    if path.startswith("/"):  
+    if path.startswith("/"):
         path = path[1:]
     partial = path
-    
+
     folders = []
     folder = ' '
     while folder != "":
@@ -103,8 +103,8 @@ def split_path_all(path):
 class LRU(OrderedDict):
     """
     This keeps track of files on local filesystem and their sizes.
-    
-    Limit filesize, evicting the least recently looked-up key when full.    
+
+    Limit filesize, evicting the least recently looked-up key when full.
     """
 
     def __init__(self, data_dir, maxsize=10, *args, **kwds):
@@ -149,11 +149,11 @@ class LRU(OrderedDict):
 #####################
 
 
-def git_remove_from_remote(evilgitfs_dir, path_hash):
+def git_remove_from_remote(gitfs_dir, path_hash):
 
-    dirtydir = pre_git_ops(evilgitfs_dir)
+    dirtydir = pre_git_ops(gitfs_dir)
 
-    filelist_path = os.path.join(evilgitfs_dir, 'pure', 'filelist.txt')
+    filelist_path = os.path.join(gitfs_dir, 'pure', 'filelist.txt')
 
     output = subprocess.run(
         f'git push origin --delete {path_hash}',
@@ -169,20 +169,20 @@ def git_remove_from_remote(evilgitfs_dir, path_hash):
         shell=True)  # assume hash don't collide, or we got bigger problems
     logging.debug(output)
 
-    post_git_ops(evilgitfs_dir)
+    post_git_ops(gitfs_dir)
 
     return True
 
 
-def git_rename_branch(evilgitfs_dir, path_old, path_new,
+def git_rename_branch(gitfs_dir, path_old, path_new,
                       destination_file_exists, remove_from_remote_func):
     """
     We want to ensure that destination file is removed before renaming, so we block on that here.
     """
 
-    dirtydir = pre_git_ops(evilgitfs_dir)
-    filelist_path = os.path.join(evilgitfs_dir, 'pure', 'filelist.txt')
-    
+    dirtydir = pre_git_ops(gitfs_dir)
+    filelist_path = os.path.join(gitfs_dir, 'pure', 'filelist.txt')
+
     path_hash_old = hashlib.sha1(bytes(path_old, 'utf-8')).hexdigest()[:-1]
     path_hash_new = hashlib.sha1(bytes(path_new, 'utf-8')).hexdigest()[:-1]
 
@@ -229,15 +229,15 @@ def git_rename_branch(evilgitfs_dir, path_old, path_new,
             quoting=csv.QUOTE_MINIMAL)
         csvwriter.writerow([path_new, path_hash_new, filesize])
 
-    post_git_ops(evilgitfs_dir)
+    post_git_ops(gitfs_dir)
 
     return True
 
 
-def git_commit_to_remote(evilgitfs_dir, path_hash, full_path, filename, path):
+def git_commit_to_remote(gitfs_dir, path_hash, full_path, filename, path):
 
-    dirtydir = pre_git_ops(evilgitfs_dir)
-    filelist_path = os.path.join(evilgitfs_dir, 'pure', 'filelist.txt')
+    dirtydir = pre_git_ops(gitfs_dir)
+    filelist_path = os.path.join(gitfs_dir, 'pure', 'filelist.txt')
     dirty_filepath = os.path.join(dirtydir, filename)
 
     # pull first in case it exists
@@ -289,18 +289,18 @@ def git_commit_to_remote(evilgitfs_dir, path_hash, full_path, filename, path):
         capture_output=True,
         shell=True)
 
-    post_git_ops(evilgitfs_dir)
+    post_git_ops(gitfs_dir)
 
     return True
 
 
-def git_retrieve_from_remote(evilgitfs_dir, path_hash, path_file, full_path):
+def git_retrieve_from_remote(gitfs_dir, path_hash, path_file, full_path):
     """
     Retrieve is safe for multiple threads to simultaneously use. But we will still use individual dirty directory so we can track
     and clean up filesize.
     """
 
-    dirtydir = pre_git_ops(evilgitfs_dir)
+    dirtydir = pre_git_ops(gitfs_dir)
 
     # i assume is in master branch
     output = subprocess.run(
@@ -319,21 +319,21 @@ def git_retrieve_from_remote(evilgitfs_dir, path_hash, path_file, full_path):
 
     shutil.move(os.path.join(dirtydir, path_file), full_path)
 
-    post_git_ops(evilgitfs_dir)
+    post_git_ops(gitfs_dir)
 
     return True
 
 
-def pre_git_ops(evilgitfs_dir):
+def pre_git_ops(gitfs_dir):
     """
     Directs thread to correct dirtydirectory to work from, and creates it if missing
     """
 
     dirtydir = os.path.join(
-        evilgitfs_dir,
+        gitfs_dir,
         'dirty_' +
         threading.current_thread().name)
-    puredir = os.path.join(evilgitfs_dir, 'pure')
+    puredir = os.path.join(gitfs_dir, 'pure')
 
     # if dir not there, make it
     if not os.path.exists(dirtydir):
@@ -342,7 +342,7 @@ def pre_git_ops(evilgitfs_dir):
     return dirtydir
 
 
-def post_git_ops(evilgitfs_dir):
+def post_git_ops(gitfs_dir):
     """
     If queue empty, checks if filesize of directory is too large, and remakes directory if so.
     """
@@ -350,10 +350,10 @@ def post_git_ops(evilgitfs_dir):
     # wipe and remake
 
     dirtydir = os.path.join(
-        evilgitfs_dir,
+        gitfs_dir,
         'dirty_' +
         threading.current_thread().name)
-    puredir = os.path.join(evilgitfs_dir, 'pure')
+    puredir = os.path.join(gitfs_dir, 'pure')
 
     # https://stackoverflow.com/a/1392549
     if executor._work_queue.qsize() < max_workers:
@@ -370,7 +370,7 @@ def post_git_ops(evilgitfs_dir):
     return True
 
 
-def git_sync_filelist(evilgitfs_dir):
+def git_sync_filelist(gitfs_dir):
     global remote_file_size
     """
     Pull changes, merge and push changes for pure/filelist.txt
@@ -379,7 +379,7 @@ def git_sync_filelist(evilgitfs_dir):
 
     """
 
-    puredir = os.path.join(evilgitfs_dir, 'pure')
+    puredir = os.path.join(gitfs_dir, 'pure')
     filelist_path = os.path.join(puredir, 'filelist.txt')
 
     # if we want multi-client, maybe filelist.txt should be a list of actions.
@@ -414,7 +414,7 @@ def git_sync_filelist(evilgitfs_dir):
                     # invalidate cache if file was modified and present in cache
                     if partial in lru_file_cache:
                         del lru_file_cache[partial]
-                        os.remove(os.path.join(evilgitfs_dir, 'datadir', partial))
+                        os.remove(os.path.join(gitfs_dir, 'datadir', partial))
 
                 nested_set(dir_structure, all_paths, int(filesize))
                 remote_file_size += int(filesize)
@@ -442,9 +442,9 @@ def git_sync_filelist(evilgitfs_dir):
 #####################
 
 class Passthrough(Operations):
-    def __init__(self, evilgitfs_dir):
-        self.evilgitfs_dir = evilgitfs_dir
-        self.data_dir = os.path.join(evilgitfs_dir, 'datadir')
+    def __init__(self, gitfs_dir):
+        self.gitfs_dir = gitfs_dir
+        self.data_dir = os.path.join(gitfs_dir, 'datadir')
         self.actions = defaultdict(set)
 
     # Helpers
@@ -808,7 +808,7 @@ class Passthrough(Operations):
 
         executor.submit(
             git_rename_branch,
-            self.evilgitfs_dir,
+            self.gitfs_dir,
             path_old,
             path_new,
             destination_file_exists,
@@ -832,12 +832,12 @@ class Passthrough(Operations):
             # used in git_rename_branch
             executor.submit(
                 git_remove_from_remote,
-                self.evilgitfs_dir,
+                self.gitfs_dir,
                 path_hash).result()
         else:
             executor.submit(
                 git_remove_from_remote,
-                self.evilgitfs_dir,
+                self.gitfs_dir,
                 path_hash)
 
         return True
@@ -869,7 +869,7 @@ class Passthrough(Operations):
         # async call, but we want to block using .result()
         executor.submit(
             git_retrieve_from_remote,
-            self.evilgitfs_dir,
+            self.gitfs_dir,
             path_hash,
             path_file,
             full_path).result()
@@ -892,7 +892,7 @@ class Passthrough(Operations):
 
         executor.submit(
             git_commit_to_remote,
-            self.evilgitfs_dir,
+            self.gitfs_dir,
             path_hash,
             full_path,
             filename,
@@ -1000,7 +1000,7 @@ class Passthrough(Operations):
             size = os.lstat(self._full_path(path)).st_size
         partial, all_paths = split_path_all(path)
         nested_set(dir_structure, all_paths, size)
-        
+
         # and LRU
         lru_file_cache[partial] = size
 
@@ -1008,17 +1008,17 @@ class Passthrough(Operations):
         logging.debug(lru_file_cache)
 
 
-def main(mountpoint, evilgitfs_dir):
+def main(mountpoint, gitfs_dir):
     global remote_file_size
 
-    data_dir = os.path.join(evilgitfs_dir, 'datadir')
-    pure_dir = os.path.join(evilgitfs_dir, 'pure')
+    data_dir = os.path.join(gitfs_dir, 'datadir')
+    pure_dir = os.path.join(gitfs_dir, 'pure')
 
-    if os.path.exists(evilgitfs_dir):
+    if os.path.exists(gitfs_dir):
         # ensure consistencies
         pass
     else:
-        os.makedirs(evilgitfs_dir)
+        os.makedirs(gitfs_dir)
         os.makedirs(data_dir)
         os.makedirs(pure_dir)
         open(os.path.join(pure_dir, 'filelist.txt'), 'w').close()
@@ -1031,7 +1031,7 @@ def main(mountpoint, evilgitfs_dir):
             cwd=pure_dir,
             capture_output=True,
             shell=True)
-        
+
         if b"fatal: repository" in output.stdout and b"not found" in output.stdout:
             raise ValueError('Repo not found, please go to git repo website to create repo')
 
@@ -1051,7 +1051,7 @@ def main(mountpoint, evilgitfs_dir):
     logging.debug(output)
 
     # Delete all fsworker dirs to cleanup
-    for i in glob(os.path.join(evilgitfs_dir, 'fsworker*')):
+    for i in glob(os.path.join(gitfs_dir, 'fsworker*')):
         shutil.rmtree(i)
 
     # populate dir_structure and remote_file_size
@@ -1095,24 +1095,24 @@ def main(mountpoint, evilgitfs_dir):
     logging.debug(f'dir_structure {lru_file_cache}')
 
     FUSE(
-        Passthrough(evilgitfs_dir),
+        Passthrough(gitfs_dir),
         mountpoint,
         nothreads=False,
         foreground=True)
 
 
-def sync_loop(evilgitfs_dir, sync_freq):
+def sync_loop(gitfs_dir, sync_freq):
 
     while True:
         time.sleep(sync_freq * 60)
         logging.debug('syncing filelist.txt')
-        git_sync_filelist(evilgitfs_dir)
+        git_sync_filelist(gitfs_dir)
 
 
 if __name__ == '__main__':
 
     description = """
-evilgitfs is a FUSE file system that stores your files on a remote git repository. You can limit the amount of local disk storage used, and evilgitfs uses an LRU cache to make full use of the local disk storage, while allowing you to have a total file storage more than the specified local disk storage.
+gitfs is a FUSE file system that stores your files on a remote git repository. You can limit the amount of local disk storage used, and gitfs uses an LRU cache to make full use of the local disk storage, while allowing you to have a total file storage more than the specified local disk storage.
 
 All commands except read are done in background and non-blocking."""
 
@@ -1130,28 +1130,28 @@ All commands except read are done in background and non-blocking."""
                         help='sync frequency of file listing in minutes (default=5)')
     parser.add_argument('--workers', default=5, type=int,
                         help='number of threads for git operations (default=5)')
-    parser.add_argument('--git-directory', default='~/.evilgitfs',
-                        help='directory for evilgitfs operations and cache storage (default=\'~/.evilgitfs\')')
+    parser.add_argument('--git-directory', default='~/.gitfs',
+                        help='directory for gitfs operations and cache storage (default=\'~/.gitfs\')')
 
     args = parser.parse_args()
 
     try:
-        git_token = os.environ['evilgitfs_gittoken']
+        git_token = os.environ['gitfs_gittoken']
     except KeyError:
         token = input(
-            f'Enter git token for {args.username}. Set environment variable \'evilgitfs_gittoken\' to automate this.\n Token: ')
+            f'Enter git token for {args.username}. Set environment variable \'gitfs_gittoken\' to automate this.\n Token: ')
 
     username = args.username
-    gitrepo = args.gitrepo  
-    cache_size = args.cache_size  
+    gitrepo = args.gitrepo
+    cache_size = args.cache_size
     sync_freq = args.sync_freq
     max_workers = args.workers
-    evilgitfs_dir = os.path.expanduser(args.git_directory)
+    gitfs_dir = os.path.expanduser(args.git_directory)
     mount_dir = os.path.expanduser(args.mountpoint)
 
     lru_file_cache = LRU(
         os.path.join(
-            evilgitfs_dir,
+            gitfs_dir,
             'datadir'),
         maxsize=cache_size)
     # key = filepath
@@ -1177,10 +1177,10 @@ All commands except read are done in background and non-blocking."""
 
     sync_filelist = threading.Thread(
         target=sync_loop, args=(
-            evilgitfs_dir, sync_freq))
+            gitfs_dir, sync_freq))
     sync_filelist.start()
 
     gitrepo_parsed = urlparse(gitrepo)
     gitrepo = gitrepo_parsed.netloc + gitrepo_parsed.path
 
-    main(mount_dir, evilgitfs_dir)
+    main(mount_dir, gitfs_dir)

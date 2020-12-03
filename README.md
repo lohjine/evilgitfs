@@ -1,13 +1,13 @@
-# evilgitfs
+# gitfs
 
-evilgitfs is a FUSE file system that stores your files on a remote git repository. You can limit the amount of local disk storage used, and evilgitfs uses an LRU cache to make full use of the local disk storage, while allowing you to have a total file storage more than the specified local disk storage.
+gitfs is a FUSE file system that stores your files on a remote git repository. You can limit the amount of local disk storage used, and gitfs uses an LRU cache to make full use of the local disk storage, while allowing you to have a total file storage more than the specified local disk storage.
 
 All commands except read are done in background and non-blocking.
 
 ## Installation
 
 ```
-git clone https://github.com/lohjine/evilgitfs
+git clone https://github.com/lohjine/gitfs
 pip3 install -r requirements.txt
 ```
 
@@ -17,17 +17,17 @@ pip3 install -r requirements.txt
 Create an empty git repository on a remote git server, and run the following command:
 
 
-python3 evilgitfs -h
+python3 gitfs -h
 
 usage: f.py [-h] [--cache-size CACHE_SIZE] [--sync-freq SYNC_FREQ] [--workers WORKERS] [--git-directory GIT_DIRECTORY] username gitrepo mountpoint
 
-evilgitfs is a FUSE file system that stores your files on a remote git repository. You can limit the amount of local disk storage used, and evilgitfs
+gitfs is a FUSE file system that stores your files on a remote git repository. You can limit the amount of local disk storage used, and gitfs
 uses an LRU cache to make full use of the local disk storage, while allowing you to have a total file storage more than the specified local disk storage.
 All commands except read are done in background and non-blocking.
 
 positional arguments:
   username              your git username (e.g. lohjine)
-  gitrepo               remote git repository, has to exist (e.g. https://github.com/lohjine/evilgitfs)
+  gitrepo               remote git repository, has to exist (e.g. https://github.com/lohjine/gitfs)
   mountpoint            filepath for local mount point (e.g. ~/gitmount)
 
 optional arguments:
@@ -38,10 +38,10 @@ optional arguments:
                         sync frequency of file listing in minutes (default=5)
   --workers WORKERS     number of threads for git operations (default=5)
   --git-directory GIT_DIRECTORY
-                        directory for evilgitfs operations and cache storage (default='~/.evilgitfs')
+                        directory for gitfs operations and cache storage (default='~/.gitfs')
 ```
 
-Evilgitfs requires your [git token](https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token). On startup, evilgitfs will attempt to read environment variable `evilgitfs_gittoken`. If not set, it will prompt you to enter it.
+gitfs requires your [git token](https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token). On startup, gitfs will attempt to read environment variable `gitfs_gittoken`. If not set, it will prompt you to enter it.
 
 ## Unavailable features
 
